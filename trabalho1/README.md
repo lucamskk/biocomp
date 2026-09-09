@@ -1,55 +1,82 @@
-# Trabalho 1 para cadeira de Biologia computacional
+# Alinhamento de Sequências — Needleman-Wunsch e Smith-Waterman
 
-## Sequências
-> Humano (Homo sapiens) [TaxId: 9606]
-> 2DN3:A|PDBID|CHAIN|SEQUENCE
-> VLSPADKTNVKAAWGKVGAHAGEYGAEALERMFLSFPTTKTYFPHFDLSHGSAQVKGHGKKVADALTNAVAHVDDMPNALSALSDLHAHKLRVDPVNFKLLSHCLLVTLAAHLPAEFTPAVHASLDKFLASVSTVLTSKY
+Implementação em Python de dois algoritmos clássicos de alinhamento de
+sequências biológicas, aplicados a sequências de hemoglobina (cadeia alfa)
+de quatro espécies: *Homo sapiens*, *Chrysocyon brachyurus* (lobo-guará),
+*Gallus gallus* (galinha) e *Oncorhynchus mykiss* (truta arco-íris).
 
-> Lobo-Guará (Chrysocyon brachyurus) [TaxId: 68728]
-> 1FHJ:A|PDBID|CHAIN|SEQUENCE
-> VLSPADKTNIKSTWDKIGGHAGDYGGEALDRTFQSFPTTKTYFPHFDLSPGSAQVKAHGKKVADALTTAVAHLDDLPGALSALSDLHAYKLRVDPVNFKLLSHCLLVTLACHHPTEFTPAVHASLDKFFTAVSTVLTSKYR
+## Conteúdo
 
-> Galinha (Gallus gallus) [TaxId: 9031]
-> 1HBR:A|PDBID|CHAIN|SEQUENCE
-> MLTAEDKKLIQQAWEKAASHQEEFGAEALTRMFTTYPQTKTYFPHFDLSPGSDQVRGHGKKVLGALGNAVKNVDNLSQAMAELSNLHAYNLRVDPVNFKLLSQCIQVVLAVHMGKDYTPEVHAAFDKFLSAVSAVLAEKYR
+| Arquivo | Descrição |
+|---|---|
+| `needleman_wunsch.py` | Alinhamento **global** — compara as sequências do início ao fim. |
+| `smith_waterman.py` | Alinhamento **local** — encontra a sub-região de maior similaridade. |
 
-> Truta Arco-Íris (Oncorhynchus mykiss) [TaxId: 8022]
+## Requisitos
 
-> 1OUT:A|PDBID|CHAIN|SEQUENCE
-> XSLTAKDKSVVKAFWGKISGKADVVGAEALGRMLTAYPQTKTYFSHWADLSPGSGPVKKHGGIIMGAIGKAVGLMDDLVGGMSALSDLHAFKLRVDPGNFKILSHNILVTLAIHFPSDFTPEVHIAVDKFLAAVSAALADKYR
+- Python 3.x (nenhuma biblioteca externa é necessária)
 
-Questão 1.
+## Como executar
 
-a) Desenvolva um programa que implemente o algoritmo de Needleman-Wunsch. A implementação deve incluir a criação da matriz de pontuação e a função de traceback para reconstruir o alinhamento.
+```bash
+python3 needleman_wunsch.py
+python3 smith_waterman.py
+```
 
-b) Utilize a função de alinhamento para processar os seguintes pares de sequências:
+Cada script imprime no terminal os alinhamentos, as pontuações e, no caso do
+Needleman-Wunsch, a porcentagem de identidade entre *Homo sapiens* e cada
+uma das outras três espécies.
 
-    Homo Sapiens vs. Chrysocyon brachyurus
-    Homo Sapiens vs. Gallus gallus
-    Homo Sapiens vs. Oncorhynchus mykiss
+## `needleman_wunsch.py`
 
-Para cada par, imprima o alinhamento global resultante e a pontuação final obtida.
+Implementa o algoritmo de Needleman-Wunsch (programação dinâmica) para
+alinhamento global:
 
-c) Calcule a porcentagem de identidade de sequências para cada um dos pares acima 
+- `needleman_wunsch(seq_a, seq_b, match, mismatch, gap)` — constrói a matriz
+  de pontuação e faz o traceback, retornando as duas sequências alinhadas
+  (com gaps `-`) e a pontuação final.
+- `porcentagem_identidade(align_a, align_b)` — calcula a % de posições
+  idênticas em relação ao comprimento total do alinhamento.
+- `imprimir_alinhamento(...)` — formata a saída em blocos de 60 colunas,
+  com um marcador `|` indicando posições idênticas.
 
-d) Baseado nos resultados, identifique qual espécie apresenta a maior similaridade com a sequência Homo Sapiens.
-Questão 2
+**Parâmetros de pontuação padrão:** match = `+1`, mismatch = `-1`, gap = `-2`.
 
-a) Implemente o algoritmo de Smith-Waterman para alinhamento local. Sua implementação deve incluir a criação da matriz de pontuação e a função de traceback.
-b) Identifique e extraia a sub-sequência com a maior pontuação para cada par:
+### Resultado (resumo)
 
-    Homo Sapiens vs. Chrysocyon brachyurus
-    Homo Sapiens vs. Gallus gallus
-    Homo Sapiens vs. Oncorhynchus mykiss
+| Espécie comparada | Pontuação | Identidade |
+|---|---|---|
+| Chrysocyon brachyurus | 90 | 82,27% |
+| Gallus gallus | 24 | 58,87% |
+| Oncorhynchus mykiss | 14 | 55,94% |
 
-Qual é o valor dessa pontuação e qual é a sub-sequência correspondente?
+## `smith_waterman.py`
 
-c) Realize o traceback a partir da célula na linha 4 e coluna 5 da matriz de pontuação. Quais os alinhamento local obtidos para cada par avaliado?
+Implementa o algoritmo de Smith-Waterman para alinhamento local. Principais
+diferenças em relação ao Needleman-Wunsch: nenhuma célula da matriz pode ser
+negativa (`F[i][j] = max(0, ...)`), e o traceback pode partir de qualquer
+célula, terminando ao encontrar uma célula com valor 0.
 
-Orientações para Entrega 
+- `smith_waterman_matrix(seq_a, seq_b, match, mismatch, gap)` — constrói a
+  matriz de pontuação local.
+- `traceback_local(F, seq_a, seq_b, start_i, start_j, ...)` — faz o
+  traceback a partir de uma célula específica da matriz (usada tanto para
+  encontrar o alinhamento ótimo quanto para o traceback a partir de uma
+  posição arbitrária, como `F[4][5]`).
+- `smith_waterman(seq_a, seq_b, ...)` — encontra automaticamente a célula de
+  maior pontuação da matriz e retorna o alinhamento local ótimo.
 
-Para a sua avaliação, você deverá enviar os seguintes arquivos:
+### Resultado (resumo)
 
-    Código-Fonte: Um arquivo compactado (.zip ou .rar) contendo todos os arquivos de código do seu programa. Certifique-se de que o código está completo e funcional, conforme as instruções da atividade. Inclua arquivo readme.txt com instruções de uso do código desenvolvido.
+| Espécie comparada | Pontuação máxima (alinhamento local) |
+|---|---|
+| Chrysocyon brachyurus | 92 |
+| Gallus gallus | 34 |
+| Oncorhynchus mykiss | 25 |
 
-    Relatório em PDF: Um arquivo em formato PDF contendo as respostas detalhadas para as questões propostas.
+## Conclusão
+
+Ambos os algoritmos apontam o **lobo-guará (*Chrysocyon brachyurus*)** como
+a espécie com maior similaridade à hemoglobina alfa humana, seguida da
+galinha e, por último, da truta arco-íris — resultado consistente com a
+proximidade filogenética entre mamíferos.
